@@ -24,6 +24,7 @@ export const useGameState = () => {
   const [showPaths, setShowPaths] = useState(false);
   const [isTrainingMode, setIsTrainingMode] = useState(false);
   const [generation, setGeneration] = useState(1);
+  const [brainType, setBrainType] = useState('algorithmic'); // 'algorithmic' | 'neural'
   
   // Advanced AI Config State
   const [starvationThreshold, setStarvationThreshold] = useState(40);
@@ -79,6 +80,12 @@ export const useGameState = () => {
     // Selection: Top 10% (5 snakes) are elite
     const elites = results.slice(0, 5);
     const nextGenWeights = [];
+
+    // Save the absolute best to localStorage for Arena mode
+    if (elites.length > 0) {
+      const bestWeights = elites[0].weights.map(w => Array.from(w));
+      localStorage.setItem('snake_apex_predator', JSON.stringify(bestWeights));
+    }
 
     // 1. Keep Elites (5)
     elites.forEach(e => nextGenWeights.push(e.weights));
@@ -141,14 +148,32 @@ export const useGameState = () => {
         plannedPath: [],
         isDead: false
       }));
+      
+      let savedWeights = null;
+      if (brainType === 'neural') {
+        const savedStr = localStorage.getItem('snake_apex_predator');
+        if (savedStr) {
+          try {
+            const parsed = JSON.parse(savedStr);
+            savedWeights = parsed.map(arr => new Float32Array(arr));
+          } catch(e) {
+            console.error("Failed to parse saved brain weights", e);
+          }
+        }
+      }
+
       initialSnakes.forEach(s => {
-        brainsRef.current[s.id] = new AlgorithmicBrain(aiConfigRef.current);
+        if (brainType === 'neural') {
+          brainsRef.current[s.id] = new NeuralBrain(aiConfigRef.current, savedWeights);
+        } else {
+          brainsRef.current[s.id] = new AlgorithmicBrain(aiConfigRef.current);
+        }
       });
     }
     
     envRef.current = new GameEnvironment(initialSnakes, { isTrainingMode });
     setGameState(envRef.current.getState());
-  }, [initialSnakeCount, isTrainingMode, generation]);
+  }, [initialSnakeCount, isTrainingMode, generation, brainType]);
 
   useEffect(() => {
     initGame();
@@ -212,6 +237,7 @@ export const useGameState = () => {
     showPaths, setShowPaths,
     isTrainingModeToggle: isTrainingMode, setIsTrainingMode,
     generation,
+    brainType, setBrainType,
     spawnSnake,
     initGame 
   };

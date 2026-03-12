@@ -48,7 +48,8 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 6: Integration & Arena Mode (UI)
 *Goal: Bring the evolved brains back into the visual simulation.*
-- [ ] Update the React UI to allow selecting the "Brain Type" for new predators (Algorithmic vs. Neural Checkpoint).
-- [ ] Build a file loader or `localStorage` reader to hydrate a `NeuralBrain` from saved weights.
-- [ ] Ensure the 70ms visual tick loop correctly queries the `NeuralBrain` for intents using real-time sensor data.
-- [ ] (Future) Add combat/kill rewards to the fitness function for Phase 2 training.
+- [x] Update the React UI to allow selecting the "Brain Type" for new predators (Algorithmic vs. Neural Checkpoint).
+- [x] Build a file loader or `localStorage` reader to hydrate a `NeuralBrain` from saved weights.
+- [x] Ensure the 70ms visual tick loop correctly queries the `NeuralBrain` for intents using real-time sensor data.
+- [x] (Future) Add combat/kill rewards to the fitness function for Phase 2 training.
+  - *Status:* **COMPLETED**. `localStorage` captures the absolute best (Apex Predator) weights of a generation. The UI now has a toggle to swap between the hardcoded `ALGORITHMIC (BFS)` and the learned `NEURAL (LOAD APEX)` brain for standard Arena mode.

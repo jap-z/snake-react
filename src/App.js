@@ -6,11 +6,19 @@ import { useGameState } from './hooks/useGameState';
 
 const App = () => {
   const { 
-    snakes, food, isGameOver, status, 
+    snakes, food, foods, isGameOver, status, 
     tickRate, setTickRate, 
     sightRange, setSightRange,
     smellRange, setSmellRange,
+    starvationThreshold, setStarvationThreshold,
+    starveMultiplier, setStarveMultiplier,
+    riskToleranceBase, setRiskToleranceBase,
+    memoryRetention, setMemoryRetention,
     initialSnakeCount, setInitialSnakeCount,
+    showPaths, setShowPaths,
+    isTrainingModeToggle, setIsTrainingMode,
+    generation,
+    brainType, setBrainType,
     spawnSnake
   } = useGameState();
 
@@ -29,7 +37,7 @@ const App = () => {
       overflowY: 'auto',
       overflowX: 'hidden'
     }}>
-      <Header snakes={snakes} status={status} />
+      <Header snakes={snakes} status={status} generation={generation} isTrainingMode={isTrainingModeToggle} />
       
       <main style={{
         flex: '1 0 auto',
@@ -42,13 +50,23 @@ const App = () => {
         <GameBoard 
           snakes={snakes} 
           food={food} 
+          foods={foods}
+          isTrainingMode={isTrainingModeToggle}
           isGameOver={isGameOver} 
+          showPaths={showPaths}
         />
         <Controls 
           tickRate={tickRate} setTickRate={setTickRate}
           sightRange={sightRange} setSightRange={setSightRange}
           smellRange={smellRange} setSmellRange={setSmellRange}
+          starvationThreshold={starvationThreshold} setStarvationThreshold={setStarvationThreshold}
+          starveMultiplier={starveMultiplier} setStarveMultiplier={setStarveMultiplier}
+          riskToleranceBase={riskToleranceBase} setRiskToleranceBase={setRiskToleranceBase}
+          memoryRetention={memoryRetention} setMemoryRetention={setMemoryRetention}
           initialSnakeCount={initialSnakeCount} setInitialSnakeCount={setInitialSnakeCount}
+          showPaths={showPaths} setShowPaths={setShowPaths}
+          isTrainingMode={isTrainingModeToggle} setIsTrainingMode={setIsTrainingMode}
+          brainType={brainType} setBrainType={setBrainType}
           spawnSnake={spawnSnake}
         />
       </main>
