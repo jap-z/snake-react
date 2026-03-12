@@ -4,11 +4,12 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 1: Engine Decoupling (Pure Physics Engine)
 *Goal: Separate game rules from the React rendering lifecycle to allow high-speed headless execution.*
-- [ ] Create `src/engine/GameEnvironment.js` as a pure ES6 class.
-- [ ] Port grid state, snake body arrays, and food coordinates into class state.
-- [ ] Port physics logic (`getSafeNextMove` execution, collision detection, eating, starvation).
-- [ ] Implement a `tick(intents)` method that processes an array of actions (e.g., `TURN_LEFT`, `GO_STRAIGHT`, `TURN_RIGHT`) and updates the state.
-- [ ] Refactor `useGameState.js` to simply instantiate `GameEnvironment` and sync its state to React state on a `setInterval`.
+- [x] Create `src/engine/GameEnvironment.js` as a pure ES6 class.
+- [x] Port grid state, snake body arrays, and food coordinates into class state.
+- [x] Port physics logic (`getSafeNextMove` execution, collision detection, eating, starvation).
+- [x] Implement a `tick(intents)` method that processes an array of actions (e.g., `TURN_LEFT`, `GO_STRAIGHT`, `TURN_RIGHT`) and updates the state.
+- [x] Refactor `useGameState.js` to simply instantiate `GameEnvironment` and sync its state to React state on a `setInterval`.
+  - *Status:* **COMPLETED**. The engine is now completely separated from React. `GameEnvironment` maintains internal state and calculates physics per `tick`. The old heuristic logic was moved into `AlgorithmicBrain.js`. `useGameState` merely acts as a clock and state-sync bridge for the UI.
 
 ## Phase 2: Sensor Array & Egocentric Vision
 *Goal: Translate the 2D grid into a fixed-size 1D tensor for neural network consumption.*

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { placeFood, getObstacles, checkCollision, tileCount } from '../utils/gridUtils';
-import { determineTarget, getSafeNextMove } from '../ai/aiEngine';
+import { GameEnvironment } from '../engine/GameEnvironment';
+import { AlgorithmicBrain } from '../ai/AlgorithmicBrain';
 
 const SNAKE_TEMPLATES = [
   { id: 'green', name: 'GRN', color: '#22c55e', headColor: '#4ade80', statusColor: '#86efac', startPos: { x: 6, y: 20 } },
@@ -17,136 +17,77 @@ export const useGameState = () => {
   const [sightRange, setSightRange] = useState(10);
   const [smellRange, setSmellRange] = useState(20);
   const [tickRate, setTickRate] = useState(70);
+  const [showPaths, setShowPaths] = useState(false);
+  
+  // Advanced AI Config State
+  const [starvationThreshold, setStarvationThreshold] = useState(40);
+  const [starveMultiplier, setStarveMultiplier] = useState(2.0);
+  const [riskToleranceBase, setRiskToleranceBase] = useState(0.05);
+  const [memoryRetention, setMemoryRetention] = useState(0.95);
 
   // Game State
-  const [snakes, setSnakes] = useState([]);
-  const [food, setFood] = useState({ x: 20, y: 20 });
-  const [isGameOver, setIsGameOver] = useState(false);
-  const [status, setStatus] = useState({ text: "Simulation Running", type: "running" });
+  const [gameState, setGameState] = useState({
+    snakes: [],
+    food: { x: 20, y: 20 },
+    isGameOver: false,
+    status: { text: "Simulation Running", type: "running" }
+  });
 
-  const stateRef = useRef({ snakes, food, isGameOver, tickRate, sightRange, smellRange });
+  const envRef = useRef(null);
+  const aiConfigRef = useRef({
+    sightRange, smellRange, starvationThreshold, starveMultiplier, riskToleranceBase, memoryRetention
+  });
 
   useEffect(() => {
-    stateRef.current = { snakes, food, isGameOver, tickRate, sightRange, smellRange };
-  }, [snakes, food, isGameOver, tickRate, sightRange, smellRange]);
+    aiConfigRef.current = {
+      sightRange, smellRange, starvationThreshold, starveMultiplier, riskToleranceBase, memoryRetention
+    };
+  }, [sightRange, smellRange, starvationThreshold, starveMultiplier, riskToleranceBase, memoryRetention]);
 
   const initGame = useCallback(() => {
     const count = Math.min(initialSnakeCount, SNAKE_TEMPLATES.length);
-    const newSnakes = SNAKE_TEMPLATES.slice(0, count).map(s => ({
+    const initialSnakes = SNAKE_TEMPLATES.slice(0, count).map(s => ({
       ...s,
       body: [s.startPos],
       ai: { memory: null, status: "IDLE", hunger: 0 },
+      plannedPath: [],
       isDead: false
     }));
     
-    setSnakes(newSnakes);
-    setFood(placeFood(newSnakes.flatMap(sn => sn.body), []));
-    setIsGameOver(false);
-    setStatus({ text: "Simulation Running", type: "running" });
+    envRef.current = new GameEnvironment(initialSnakes);
+    setGameState(envRef.current.getState());
   }, [initialSnakeCount]);
 
-  // Initial Boot
   useEffect(() => {
     initGame();
-  }, [initialSnakeCount]); // Restart simulation when initial count changes
+  }, [initialSnakeCount, initGame]);
 
   const spawnSnake = () => {
     setInitialSnakeCount(prev => Math.min(prev + 1, SNAKE_TEMPLATES.length));
   };
 
   const update = useCallback(() => {
-    const { snakes: currentSnakes, food: f, isGameOver: over, sightRange: sight, smellRange: smell } = stateRef.current;
-    if (over) return;
+    if (!envRef.current || envRef.current.isGameOver) return;
 
-    // 1. Move & AI Decisions
-    const nextStates = currentSnakes.map(snake => {
-      if (snake.isDead) return snake;
-
-      const newAi = { ...snake.ai, hunger: snake.ai.hunger + 1 };
-      const othersBodies = currentSnakes.filter(s => s.id !== snake.id).flatMap(s => s.body);
-      const obs = getObstacles(snake.body, othersBodies);
-      
-      const enemy = currentSnakes
-        .filter(s => s.id !== snake.id && !s.isDead)
-        .sort((a, b) => {
-          const distA = Math.abs(snake.body[0].x - a.body[0].x) + Math.abs(snake.body[0].y - a.body[0].y);
-          const distB = Math.abs(snake.body[0].x - b.body[0].x) + Math.abs(snake.body[0].y - b.body[0].y);
-          return distA - distB;
-        })[0] || currentSnakes[0];
-      
-      const target = determineTarget(snake.body, newAi, f, enemy.body, sight, smell);
-      const nextMove = getSafeNextMove(snake.body, target, obs, enemy.body, newAi);
-
-      return {
-        ...snake,
-        ai: newAi,
-        nextMove,
-        newBody: [nextMove, ...snake.body]
-      };
-    });
-
-    // 2. Handle Eating
-    let foodEaten = false;
-    const finalSnakes = nextStates.map(snake => {
-      if (snake.isDead) return snake;
-      const eats = snake.nextMove.x === f.x && snake.nextMove.y === f.y;
-      if (eats) {
-        foodEaten = true;
-        return { ...snake, body: snake.newBody, ai: { ...snake.ai, hunger: 0 } };
-      }
-      const b = [...snake.newBody];
-      b.pop();
-      return { ...snake, body: b };
-    });
-
-    if (foodEaten) {
-      const allBodies = finalSnakes.flatMap(s => s.body);
-      setFood(placeFood(allBodies, []));
-    }
-
-    // 3. Collision & Death
-    let deathOccurred = false;
-    const evaluatedSnakes = finalSnakes.map(snake => {
-      if (snake.isDead) return snake;
-      
-      const othersBodies = finalSnakes.filter(s => s.id !== snake.id).flatMap(s => s.body);
-      let isDeadNow = checkCollision(snake.body[0], snake.body, othersBodies);
-      
-      finalSnakes.forEach(other => {
-        if (snake.id !== other.id && !other.isDead) {
-          if (snake.body[0].x === other.body[0].x && snake.body[0].y === other.body[0].y) {
-            if (snake.body.length <= other.body.length) isDeadNow = true;
-          }
-        }
-      });
-
-      if (isDeadNow) {
-        deathOccurred = true;
-        return { ...snake, isDead: true };
-      }
-      return snake;
-    });
-
-    setSnakes(evaluatedSnakes);
-
-    const aliveCount = evaluatedSnakes.filter(s => !s.isDead).length;
-    if (aliveCount <= 1 && INITIAL_SNAKES_COUNT_LOGIC_PROTECTION) { // Use template length check
-       // game over logic...
-    }
+    const currentEnvState = envRef.current.getState();
+    const brain = new AlgorithmicBrain(aiConfigRef.current);
     
-    // Better game over logic for dynamic counts
-    if (currentSnakes.length > 1 && aliveCount <= 1) {
-        setIsGameOver(true);
-        const winner = evaluatedSnakes.find(s => !s.isDead);
-        setStatus({ 
-          text: winner ? `${winner.name} WINS!` : "MUTUAL DESTRUCTION!", 
-          type: "stopped" 
-        });
-        setTimeout(initGame, 3000);
+    // Have all brains decide their next move
+    const intents = {};
+    currentEnvState.snakes.forEach(snake => {
+       if (!snake.isDead) {
+          intents[snake.id] = brain.decide(snake, currentEnvState.food, currentEnvState.snakes);
+       }
+    });
+
+    // Tick the engine
+    const newState = envRef.current.tick(intents);
+    setGameState({ ...newState });
+
+    if (newState.isGameOver) {
+      setTimeout(initGame, 3000);
     }
   }, [initGame]);
-
-  const INITIAL_SNAKES_COUNT_LOGIC_PROTECTION = snakes.length > 1;
 
   useEffect(() => {
     const interval = setInterval(update, tickRate);
@@ -154,11 +95,19 @@ export const useGameState = () => {
   }, [update, tickRate]);
 
   return { 
-    snakes, food, isGameOver, status, 
+    snakes: gameState.snakes, 
+    food: gameState.food, 
+    isGameOver: gameState.isGameOver, 
+    status: gameState.status, 
     tickRate, setTickRate, 
     sightRange, setSightRange,
     smellRange, setSmellRange,
+    starvationThreshold, setStarvationThreshold,
+    starveMultiplier, setStarveMultiplier,
+    riskToleranceBase, setRiskToleranceBase,
+    memoryRetention, setMemoryRetention,
     initialSnakeCount, setInitialSnakeCount,
+    showPaths, setShowPaths,
     spawnSnake,
     initGame 
   };
