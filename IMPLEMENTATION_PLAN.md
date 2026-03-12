@@ -23,9 +23,10 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 3: The Brain Interface & Algorithmic Port
 *Goal: Standardize how different AIs interact with the engine.*
-- [ ] Create `src/ai/BaseBrain.js` interface with a `decide(sensorData)` method.
-- [ ] Refactor our current BFS/FloodFill logic into `src/ai/AlgorithmicBrain.js`. Note: This will require translating the new `TURN_LEFT`/`GO_STRAIGHT` intents back into grid coordinates internally.
-- [ ] Create a placeholder `src/ai/NeuralBrain.js` that returns random intents.
+- [x] Create `src/ai/BaseBrain.js` interface with a `decide(sensorData)` method.
+- [x] Refactor our current BFS/FloodFill logic into `src/ai/AlgorithmicBrain.js`. Note: This will require translating the new `TURN_LEFT`/`GO_STRAIGHT` intents back into grid coordinates internally.
+- [x] Create a placeholder `src/ai/NeuralBrain.js` that returns random intents.
+  - *Status:* **COMPLETED**. Established the `BaseBrain` interface. `AlgorithmicBrain` now computes moves and translates them into relative `Intents` (TURN_LEFT, etc.). `GameEnvironment` was updated to parse these intents back into grid physics. `NeuralBrain` placeholder is ready for Phase 5.
 
 ## Phase 4: Headless Training Loop (The Gymnasium)
 *Goal: Build the environment capable of running thousands of games per second.*

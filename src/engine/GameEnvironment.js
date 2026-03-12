@@ -25,7 +25,7 @@ export class GameEnvironment {
     return getEgocentricSensorState(snake, this.food, this.snakes, this.tileCount);
   }
 
-  // brainsOutput is an object mapping snakeId to { move: {x,y}, path: [], aiState: {} }
+  // brainsOutput is an object mapping snakeId to { intent: '...', path: [], aiState: {} }
   tick(brainsOutput) {
     if (this.isGameOver) return this.getState();
     this.tickCount++;
@@ -35,7 +35,22 @@ export class GameEnvironment {
       if (snake.isDead) return snake;
 
       const output = brainsOutput[snake.id];
-      const nextMove = output ? output.move : { x: snake.body[0].x, y: snake.body[0].y - 1 };
+      const intent = output ? output.intent : 'GO_STRAIGHT';
+      
+      const head = snake.body[0];
+      let dx = 0, dy = -1; // Default UP
+      if (snake.body.length > 1) {
+        dx = head.x - snake.body[1].x;
+        dy = head.y - snake.body[1].y;
+      }
+      
+      let nextMove = { x: head.x + dx, y: head.y + dy }; // Default straight
+      if (intent === 'TURN_LEFT') {
+        nextMove = { x: head.x + dy, y: head.y - dx };
+      } else if (intent === 'TURN_RIGHT') {
+        nextMove = { x: head.x - dy, y: head.y + dx };
+      }
+
       const newAi = output && output.aiState ? output.aiState : { ...snake.ai };
       const path = output && output.path ? output.path : [];
 

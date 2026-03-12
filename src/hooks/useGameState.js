@@ -76,7 +76,8 @@ export const useGameState = () => {
     const intents = {};
     currentEnvState.snakes.forEach(snake => {
        if (!snake.isDead) {
-          intents[snake.id] = brain.decide(snake, currentEnvState.food, currentEnvState.snakes);
+          const sensorData = envRef.current.getSensorState(snake.id);
+          intents[snake.id] = brain.decide(sensorData, snake, currentEnvState.food, currentEnvState.snakes);
        }
     });
 
