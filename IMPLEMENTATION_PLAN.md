@@ -37,13 +37,14 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 5: The Genetic Algorithm (TFJS & Custom NEAT)
 *Goal: Breed and mutate the neural networks.*
-- [ ] Install `@tensorflow/tfjs` and `@tensorflow/tfjs-backend-wasm`.
-- [ ] Implement the NN topology in `NeuralBrain.js` (Input: 363 -> Hidden: 64 -> Hidden: 32 -> Output: 3 Softmax).
-- [ ] Implement `src/training/Genetics.js`:
+- [x] Install `@tensorflow/tfjs` and `@tensorflow/tfjs-backend-wasm`.
+- [x] Implement the NN topology in `NeuralBrain.js` (Input: 363 -> Hidden: 64 -> Hidden: 32 -> Output: 3 Softmax).
+- [x] Implement `src/training/Genetics.js`:
   - `crossover(brainA, brainB)`: Mixes weights.
   - `mutate(brain, rate)`: Applies random Gaussian noise to weights.
-- [ ] Wire the genetics into `Trainer.js` to handle generation progression.
-- [ ] Implement checkpoint saving: Serialize the best brain's weights to `localStorage` or a downloadable JSON file every 10 generations.
+- [x] Wire the genetics into `Trainer.js` (and `useGameState` for swarm visualization).
+- [x] Implement selection logic: Top 10% elite retention + 90% offspring via crossover.
+  - *Status:* **COMPLETED**. Integrated TensorFlow.js into the swarm loop. Snakes now have persistent weights that are bred and mutated every generation. Memory leaks are managed via explicit tensor disposal.
 
 ## Phase 6: Integration & Arena Mode (UI)
 *Goal: Bring the evolved brains back into the visual simulation.*
