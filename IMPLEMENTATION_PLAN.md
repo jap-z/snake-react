@@ -30,9 +30,10 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 4: Headless Training Loop (The Gymnasium)
 *Goal: Build the environment capable of running thousands of games per second.*
-- [ ] Create `src/training/Trainer.js`.
-- [ ] Implement the `runGeneration(population)` loop: Spawns a dedicated headless `GameEnvironment` for each snake (or a large batch of snakes) and runs `tick()` in a `while` loop until all snakes die.
-- [ ] Implement the Fitness Scoring logic: Apply the `Base Score * (Final Length ^ 1.5)` formula, explicitly ignoring kill points.
+- [x] Create `src/training/Trainer.js`.
+- [x] Implement the `runGeneration(population)` loop: Spawns a dedicated headless `GameEnvironment` for each snake (or a large batch of snakes) and runs `tick()` in a `while` loop until all snakes die.
+- [x] Implement the Fitness Scoring logic: Apply the `Base Score * (Final Length ^ 1.5)` formula, explicitly ignoring kill points.
+  - *Status:* **COMPLETED**. `Trainer.js` built. Implemented a `while` loop that forces a maximum tick count and kills snakes that hit a high hunger threshold (starvation). The fitness formula balances survival ticks with exponential rewards for actually eating food.
 
 ## Phase 5: The Genetic Algorithm (TFJS & Custom NEAT)
 *Goal: Breed and mutate the neural networks.*
