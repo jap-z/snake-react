@@ -1,4 +1,5 @@
 import { placeFood, checkCollision, tileCount } from '../utils/gridUtils';
+import { getEgocentricSensorState } from './sensors';
 
 export class GameEnvironment {
   constructor(initialSnakes) {
@@ -16,6 +17,12 @@ export class GameEnvironment {
     this.isGameOver = false;
     this.status = { text: "Simulation Running", type: "running" };
     this.tickCount = 0;
+  }
+
+  getSensorState(snakeId) {
+    const snake = this.snakes.find(s => s.id === snakeId);
+    if (!snake || snake.isDead) return null;
+    return getEgocentricSensorState(snake, this.food, this.snakes, this.tileCount);
   }
 
   // brainsOutput is an object mapping snakeId to { move: {x,y}, path: [], aiState: {} }

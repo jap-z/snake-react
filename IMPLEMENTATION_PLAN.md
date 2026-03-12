@@ -13,12 +13,13 @@ This document outlines the step-by-step engineering roadmap for migrating the Sn
 
 ## Phase 2: Sensor Array & Egocentric Vision
 *Goal: Translate the 2D grid into a fixed-size 1D tensor for neural network consumption.*
-- [ ] Define the Receptive Field size (e.g., 11x11 grid centered on the snake's head).
-- [ ] Implement Egocentric rotation math: Map global X/Y coordinates to the snake's local Forward/Left/Right/Back perspective.
-- [ ] Implement Channel 1: Physical Obstacles (Walls, Self, Enemies). Handle out-of-bounds padding.
-- [ ] Implement Channel 2: Direct Sight (Exact food location, 1.0 or 0.0).
-- [ ] Implement Channel 3: Scent Gradient (Mathematical distance/heat map pointing toward food).
-- [ ] Expose a `getSensorState(snakeId)` method in `GameEnvironment` that returns the flattened `363` (11x11x3) length array.
+- [x] Define the Receptive Field size (e.g., 11x11 grid centered on the snake's head).
+- [x] Implement Egocentric rotation math: Map global X/Y coordinates to the snake's local Forward/Left/Right/Back perspective.
+- [x] Implement Channel 1: Physical Obstacles (Walls, Self, Enemies). Handle out-of-bounds padding.
+- [x] Implement Channel 2: Direct Sight (Exact food location, 1.0 or 0.0).
+- [x] Implement Channel 3: Scent Gradient (Mathematical distance/heat map pointing toward food).
+- [x] Expose a `getSensorState(snakeId)` method in `GameEnvironment` that returns the flattened `363` (11x11x3) length array.
+  - *Status:* **COMPLETED**. Created `src/engine/sensors.js` with `getEgocentricSensorState`. The logic mathematically rotates the grid based on the snake's heading and projects global coordinates into local Forward/Right arrays. Bounding box calculations perfectly pad walls with `1.0`.
 
 ## Phase 3: The Brain Interface & Algorithmic Port
 *Goal: Standardize how different AIs interact with the engine.*
